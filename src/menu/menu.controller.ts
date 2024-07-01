@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-06-28 20:42:40
+ * @LastEditTime: 2024-07-01 19:53:49
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -26,8 +26,7 @@ export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
   @Inject(JwtService)
-  private jwtService: JwtService;
-
+  // private jwtService: JwtService;
   @Post('add')
   create(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.create(createMenuDto);
@@ -50,11 +49,18 @@ export class MenuController {
   }
 
   @Get('query')
-  findAll(@Query('id') id: string) {
-    console.log("🚀 ~ MenuController ~ findAll ~ id:", id)
+  async findAll(@Query('id') id: string, @Query('category') category: number) {
     if (id) {
-      return this.menuService.findOne(+id);
+      const data = await this.menuService.findOne(+id);
+      if (data.length > 0) {
+        return Promise.resolve(data[0]);
+      } else {
+        throw new HttpException('数据不存在', HttpStatus.BAD_REQUEST);
+      }
     }
-    throw new HttpException('查询信息需传ID', HttpStatus.BAD_REQUEST);
+    if (category) {
+      return this.menuService.findByCategory(+category);
+    }
+    return this.menuService.findAll();
   }
 }

@@ -1,10 +1,11 @@
+/* eslint-disable prettier/prettier */
 /*
- * @Description: 
+ * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:35:03
- * @LastEditTime: 2024-06-28 20:35:15
+ * @LastEditTime: 2024-07-01 15:44:23
  * @LastEditors: muqingkun
- * @Reference: 
+ * @Reference:
  */
 import {
   CallHandler,
@@ -33,4 +34,3 @@ export class SuccessResponse<T> implements NestInterceptor {
     );
   }
 }
-

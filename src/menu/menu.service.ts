@@ -1,30 +1,18 @@
 /*
- * @Description: 
+ * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 19:41:59
- * @LastEditTime: 2024-06-28 20:45:25
+ * @LastEditTime: 2024-07-01 15:45:40
  * @LastEditors: muqingkun
- * @Reference: 
+ * @Reference:
  */
-import {
-  Injectable,
-  Logger,
-  Inject,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Menu } from './entities/menu.entity';
-import * as crypto from 'crypto';
-
-function md5(str) {
-  const hash = crypto.createHash('md5');
-  hash.update(str);
-  return hash.digest('hex');
-}
 
 @Injectable()
 export class MenuService {
@@ -34,13 +22,11 @@ export class MenuService {
   ) {}
 
   @Inject(JwtService)
-  private jwtService: JwtService;
-  private logger = new Logger();
-
-
-  async create(CreateMenuDto: CreateMenuDto) {
+  // private jwtService: JwtService;
+  // private logger = new Logger();
+  async create(createMenuDto: CreateMenuDto) {
     return await this.menuRepository.save({
-      ...CreateMenuDto
+      ...createMenuDto,
     });
   }
 
@@ -56,6 +42,11 @@ export class MenuService {
   async findOne(id: number) {
     return await this.menuRepository.find({
       where: { id },
+    });
+  }
+  async findByCategory(category: number) {
+    return await this.menuRepository.find({
+      where: { category },
     });
   }
 

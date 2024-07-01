@@ -1,10 +1,11 @@
+/* eslint-disable prettier/prettier */
 /*
- * @Description: 
+ * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:37:19
- * @LastEditTime: 2024-06-28 20:37:27
+ * @LastEditTime: 2024-07-01 20:30:15
  * @LastEditors: muqingkun
- * @Reference: 
+ * @Reference:
  */
 import {
   ArgumentsHost,
@@ -18,17 +19,18 @@ import { Response, Request } from 'express';
 // 接口异常拦截器
 export class HttpFaild implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
+    console.log("🚀 ~ HttpFaild ~ exception:", exception)
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
-    const status = exception.getStatus();
+    const status = exception?.getStatus();
     console.log(status, 'status');
 
     response.status(status).json({
       success: false,
       time: new Date(),
       msg: exception.message,
-      status,
+      code: status,
       path: request.url,
     });
   }

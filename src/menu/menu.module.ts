@@ -1,10 +1,10 @@
 /*
- * @Description: 
+ * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 19:41:59
  * @LastEditTime: 2024-06-28 20:14:53
  * @LastEditors: muqingkun
- * @Reference: 
+ * @Reference:
  */
 import { Module } from '@nestjs/common';
 import { MenuService } from './menu.service';

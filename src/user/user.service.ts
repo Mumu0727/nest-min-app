@@ -1,104 +1,68 @@
-import {
-  Injectable,
-  Logger,
-  Inject,
-  BadRequestException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+/*
+ * @Description:
+ * @Author: muqingkun
+ * @Date: 2024-06-28 20:47:13
+ * @LastEditTime: 2024-07-01 20:21:16
+ * @LastEditors: muqingkun
+ * @Reference:
+ */
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import * as crypto from 'crypto';
-
-function md5(str) {
-  const hash = crypto.createHash('md5');
-  hash.update(str);
-  return hash.digest('hex');
-}
+import { User } from './user.entity';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
+// 用户服务类，提供用户相关的业务逻辑
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
-  @Inject(JwtService)
-  private jwtService: JwtService;
-  private logger = new Logger();
-  async login(user: CreateUserDto) {
-    const foundUser = await this.userRepository.findOneBy({
-      username: user.username,
+  // 创建用户，接受用户名和密码，返回创建的用户对象
+  async createUser(username: string, password: string): Promise<User> {
+    const hashedPassword = await bcrypt.hash(password, 10); // 对密码进行哈希加密
+    const user = this.userRepository.create({
+      username,
+      password: hashedPassword,
     });
+    return this.userRepository.save(user); // 保存用户到数据库
+  }
 
-    if (!foundUser || foundUser.password !== md5(user.password)) {
-      throw new BadRequestException('账号或密码输入错误！');
+  // 根据用户名查找用户，返回用户对象
+  async findByUsername(username: string): Promise<User> {
+    return this.userRepository.findOne({ where: { username } });
+  }
+
+  // 根据ID查找用户，返回用户对象
+  async findById(id: number): Promise<User> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
+  // 更新用户密码，接受用户ID和新密码
+  async updatePassword(id: number, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // 对新密码进行哈希加密
+    await this.userRepository.update(id, { password: hashedPassword }); // 更新用户密码
+  }
+
+  async relateUsers(id: number, userName: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    const relatedUser = await this.userRepository.findOne({
+      where: { username: userName },
+    });
+    if (user && relatedUser) {
+      if (user.relatedUserId || relatedUser.relatedUserId) {
+        throw new BadRequestException(
+          '要专一哦，已关联用户不可以再关联其他用户！',
+        );
+      }
+      user.relatedUserId = relatedUser.id;
+      relatedUser.relatedUserId = id;
+    } else {
+      throw new BadRequestException('用户不存在！');
     }
-    return foundUser;
-  }
-
-  async register(user: CreateUserDto) {
-    const foundUser = await this.userRepository.findOneBy({
-      username: user.username,
-    });
-
-    if (foundUser) {
-      throw new BadRequestException('该用户名已存在！');
-    }
-
-    const newUser = new User();
-    newUser.username = user.username;
-    newUser.password = md5(user.password);
-    newUser.photos = [];
-
-    try {
-      await this.userRepository.save(newUser);
-      const token = await this.jwtService.signAsync({
-        user: {
-          username: newUser.username,
-        },
-      });
-      return {
-        code: '1',
-        data: { token },
-        message: '注册成功！',
-      };
-    } catch (e) {
-      this.logger.error(e, UserService);
-      return '注册失败';
-    }
-  }
-
-  async create(CreateUserDto: CreateUserDto) {
-    return await this.userRepository.save({
-      ...CreateUserDto,
-      photos: [],
-    });
-  }
-
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    const qb = await this.userRepository.createQueryBuilder();
-    return await qb.update().set(updateUserDto).where({ id }).execute();
-  }
-
-  async findAll() {
-    // 若不设置relations: ['photos']则查出来的user没有photos属性
-    return await this.userRepository.find({ relations: ['photos'] });
-  }
-
-  async findOne(id: number) {
-    // const sql = `select * from user where id = ${id}`;
-    // return await this.userRepository.query(sql);
-    return await this.userRepository.find({
-      where: { id },
-      relations: ['photos'],
-    });
-  }
-
-  async remove(id: number) {
-    const qb = await this.userRepository.createQueryBuilder();
-    return await qb.delete().where({ id }).execute();
+    await this.userRepository.save(relatedUser);
+    await this.userRepository.save(user);
   }
 }

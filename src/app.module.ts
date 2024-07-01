@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-06-28 20:06:28
+ * @LastEditTime: 2024-07-01 21:07:28
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -11,12 +11,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { MenuModule } from './menu/menu.module';
+import { PostModule } from './post/post.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { PhotoModule } from './photo/photo.module';
 @Module({
   imports: [
-    UserModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -34,8 +33,9 @@ import { PhotoModule } from './photo/photo.module';
         expiresIn: '150s',
       },
     }),
+    UserModule,
     MenuModule,
-    PhotoModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
