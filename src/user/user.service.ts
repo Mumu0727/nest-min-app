@@ -41,15 +41,19 @@ export class UserService {
 
   // 根据ID查找用户，返回用户对象
   async login(username: string) {
-    const token = await this.jwtService.signAsync({
-      user: {
-        username: username,
-      },
-    });
     const foundUser = await this.userRepository.findOne({
       where: { username },
     });
-    return { token, ...foundUser };
+    if (foundUser) {
+      const token = await this.jwtService.signAsync({
+        user: {
+          username: username,
+        },
+      });
+      return { token, ...foundUser };
+    } else {
+      throw new HttpException('你还没有注册哈~', HttpStatus.BAD_REQUEST);
+    }
   }
 
   // 根据ID查找用户，返回用户对象
