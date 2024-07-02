@@ -2,11 +2,12 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:47:13
- * @LastEditTime: 2024-07-01 20:21:16
+ * @LastEditTime: 2024-07-02 13:55:52
  * @LastEditors: muqingkun
  * @Reference:
  */
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -19,6 +20,9 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  @Inject(JwtService)
+  private jwtService: JwtService;
 
   // 创建用户，接受用户名和密码，返回创建的用户对象
   async createUser(username: string, password: string): Promise<User> {
@@ -33,6 +37,19 @@ export class UserService {
   // 根据用户名查找用户，返回用户对象
   async findByUsername(username: string): Promise<User> {
     return this.userRepository.findOne({ where: { username } });
+  }
+
+  // 根据ID查找用户，返回用户对象
+  async login(username: string) {
+    const token = await this.jwtService.signAsync({
+      user: {
+        username: username,
+      },
+    });
+    const foundUser = await this.userRepository.findOne({
+      where: { username },
+    });
+    return { token, ...foundUser };
   }
 
   // 根据ID查找用户，返回用户对象
@@ -53,14 +70,15 @@ export class UserService {
     });
     if (user && relatedUser) {
       if (user.relatedUserId || relatedUser.relatedUserId) {
-        throw new BadRequestException(
+        throw new HttpException(
           '要专一哦，已关联用户不可以再关联其他用户！',
+          HttpStatus.BAD_REQUEST,
         );
       }
       user.relatedUserId = relatedUser.id;
       relatedUser.relatedUserId = id;
     } else {
-      throw new BadRequestException('用户不存在！');
+      throw new HttpException('用户不存在！', HttpStatus.BAD_REQUEST);
     }
     await this.userRepository.save(relatedUser);
     await this.userRepository.save(user);

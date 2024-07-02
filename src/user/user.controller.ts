@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:47:13
- * @LastEditTime: 2024-07-01 20:06:40
+ * @LastEditTime: 2024-07-02 13:57:44
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -13,6 +13,8 @@ import {
   Put,
   Param,
   BadRequestException,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import * as bcrypt from 'bcryptjs';
@@ -31,11 +33,13 @@ export class UserController {
   // 用户登录，接受用户名和密码，返回登录结果
   @Post('login')
   async login(@Body() body: { username: string; password: string }) {
-    const user = await this.userService.findByUsername(body.username);
+    const user = await this.userService.login(body.username);
+    console.log('🚀 ~ UserController ~ login ~ user:', user);
     if (user && (await bcrypt.compare(body.password, user.password))) {
-      return { message: 'Login successful' };
+      delete user.password;
+      return user;
     } else {
-      return { message: 'Invalid credentials' };
+      throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -63,6 +67,5 @@ export class UserController {
       }
       throw error;
     }
-    return this.userService.relateUsers(id, body.userName);
   }
 }

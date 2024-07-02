@@ -3,7 +3,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-07-01 20:34:34
- * @LastEditTime: 2024-07-01 20:37:04
+ * @LastEditTime: 2024-07-02 10:37:49
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -15,6 +15,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../user/user.entity';
+import { Menu } from '../menu/menu.entity';
 
 @Entity()
 export class Post {
@@ -22,17 +23,25 @@ export class Post {
   id: number;
 
   @Column()
-  title: string;
+  menuId: number;
+      
+  @Column()
+  userId: number;
+  
+  @Column()
+  relatedUserId: number;
 
   @Column()
   content: string;
+
+  @Column()
+  releaseDate: Date;
 
   @ManyToOne(() => User, (user) => user.posts)
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  userId: number;
-  @Column()
-  relatedUserId: number;
+  @ManyToOne(() => Menu, (menu) => menu.posts)
+  @JoinColumn({ name: 'menuId' })
+  menu: Menu;
 }

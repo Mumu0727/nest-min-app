@@ -1,3 +1,11 @@
+/*
+ * @Description:
+ * @Author: muqingkun
+ * @Date: 2024-06-28 20:47:13
+ * @LastEditTime: 2024-07-02 13:58:21
+ * @LastEditors: muqingkun
+ * @Reference:
+ */
 import { JwtService } from '@nestjs/jwt';
 import {
   CanActivate,
@@ -19,7 +27,7 @@ export class LoginGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest();
 
-    const token = request.header('authorization') || '';
+    const token = request.header('authtoken') || '';
 
     try {
       const info = this.jwtService.verify(token);

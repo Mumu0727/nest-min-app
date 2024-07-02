@@ -12,7 +12,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Post } from '../post/post.entity';
 
 @Entity()
 export class Menu {
@@ -30,6 +32,8 @@ export class Menu {
   practices: string;
   @Column({ default: null })
   remark: string;
+  @OneToMany(() => Post, (post) => post.user)
+  posts: Post[];
   @CreateDateColumn()
   createDate: Date;
   @UpdateDateColumn()

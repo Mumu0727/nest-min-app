@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:47:13
- * @LastEditTime: 2024-07-01 20:52:26
+ * @LastEditTime: 2024-07-02 10:28:46
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
+  JoinColumn,
   OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
@@ -29,6 +30,9 @@ export class User {
   password: string;
 
   @OneToOne(() => User, { nullable: true })
+  @JoinColumn()
+  relatedUser: User;
+
   @Column({ nullable: true })
   relatedUserId: number; // 新增关联用户ID字段
   @OneToMany(() => Post, (post) => post.user)

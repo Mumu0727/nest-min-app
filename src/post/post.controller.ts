@@ -5,24 +5,24 @@ import {
   Get,
   Body,
   Param,
-  NotFoundException,
+  HttpException,
+  HttpStatus,
   UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
+import { CreatePostDto } from './dto/create-post.dto';
 import { LoginGuard } from 'src/login.guard';
 
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  // @UseGuards(LoginGuard) // 应用JWT认证守卫
+  @UseGuards(LoginGuard) // 应用JWT认证守卫
   @HttpPost('createPost')
   async createPost(
-    @Body('userId') userId: number,
-    @Body('title') title: string,
-    @Body('content') content: string,
+    @Body('userId') userId: number, @Body() createPostDto: CreatePostDto
   ) {
-    const post = await this.postService.createPost(userId, title, content);
+    const post = await this.postService.createPost(userId, createPostDto);
     return { message: 'Post created successfully', post };
   }
 
@@ -34,8 +34,8 @@ export class PostController {
   @Get('get/:id')
   async getPostsByUserId(@Param('id') userId: number) {
     const posts = await this.postService.getPostsByUserId(userId);
-    if (!posts || posts.length === 0) {
-      throw new NotFoundException('暂无数据');
+    if (!posts) {
+      throw new HttpException('暂无数据', HttpStatus.BAD_REQUEST);
     }
     return posts;
   }

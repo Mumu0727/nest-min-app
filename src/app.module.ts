@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-01 21:07:28
+ * @LastEditTime: 2024-07-02 14:21:33
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -25,12 +25,13 @@ import { JwtModule } from '@nestjs/jwt';
       database: 'min-app',
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
+      timezone: '+08:00', // 设置时区为北京时间
     }),
     JwtModule.register({
       global: true,
       secret: 'syb-secret',
       signOptions: {
-        expiresIn: '150s',
+        expiresIn: '7d',
       },
     }),
     UserModule,
