@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-02 16:26:29
+ * @LastEditTime: 2024-07-03 15:23:55
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -12,10 +12,14 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { MenuModule } from './menu/menu.module';
 import { PostModule } from './post/post.module';
+import { CrawlerService } from './crawler/crawler.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { JwtModule } from '@nestjs/jwt';
+import { Menu } from './menu/menu.entity';
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -24,9 +28,11 @@ import { JwtModule } from '@nestjs/jwt';
       password: 'MuMu5217426',
       database: 'min-app',
       entities: ['dist/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      synchronize: true, // 自动同步模式（开发用）
+      charset: 'utf8mb4', // 设置字符集为 utf8mb4
       timezone: '+08:00', // 设置时区为北京时间
     }),
+    TypeOrmModule.forFeature([Menu]),
     JwtModule.register({
       global: true,
       secret: 'syb-secret',
@@ -39,6 +45,6 @@ import { JwtModule } from '@nestjs/jwt';
     PostModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, CrawlerService],
 })
 export class AppModule {}

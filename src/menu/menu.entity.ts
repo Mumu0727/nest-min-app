@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 19:41:59
- * @LastEditTime: 2024-07-01 19:40:58
+ * @LastEditTime: 2024-07-03 14:11:07
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -34,6 +34,12 @@ export class Menu {
   remark: string;
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];
+  @Column('simple-json', { nullable: true })
+  steps: { text: string; img: string }[];
+  @Column({ nullable: true })
+  image: string;
+  @Column('simple-json', { nullable: true })
+  ins: Record<string, string>;
   @CreateDateColumn()
   createDate: Date;
   @UpdateDateColumn()

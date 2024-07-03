@@ -3,7 +3,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-07-01 20:34:34
- * @LastEditTime: 2024-07-02 10:37:49
+ * @LastEditTime: 2024-07-03 14:12:17
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -41,7 +41,7 @@ export class Post {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @ManyToOne(() => Menu, (menu) => menu.posts)
-  @JoinColumn({ name: 'menuId' })
+  // @ManyToOne(() => Menu, (menu) => menu.posts)
+  // @JoinColumn({ name: 'menuId' })
   menu: Menu;
 }
