@@ -19,31 +19,38 @@ export class CrawlerService {
   private readonly imageDir = path.join(__dirname, '..', '..', 'imgs');
   private readonly categoryList = [
     {
-      name: '主食',
-      value: 1,
-      id: '20132',
+      name: '其他',
+      value: 6,
+      id: '40073',
     },
-    {
-      name: '家常菜',
-      value: 2,
-      id: '40076',
-    },
-    {
-      name: '饮料',
-      value: 3,
-      id: '20136',
-    },
-    {
-      name: '甜点',
-      value: 4,
-      id: '20135',
-    },
-    {
-      name: '汤羹',
-      value: 5,
-      id: '20130',
-    },
+    // {
+    //   name: '主食',
+    //   value: 1,
+    //   id: '20132',
+    // },
+    // {
+    //   name: '家常菜',
+    //   value: 2,
+    //   id: '40076',
+    // },
+    // {
+    //   name: '饮料',
+    //   value: 3,
+    //   id: '20136',
+    // },
+    // {
+    //   name: '甜点',
+    //   value: 4,
+    //   id: '20135',
+    // },
+    // {
+    //   name: '汤羹',
+    //   value: 5,
+    //   id: '20130',
+    // },
   ];
+
+  private maxRetries = 3;
 
   private getRandomDelay() {
     return Math.floor(Math.random() * (10000 - 800 + 1)) + 800;
@@ -60,26 +67,35 @@ export class CrawlerService {
     fs.ensureDirSync(this.imageDir);
   }
 
-  @Cron('00 18 * * *')
+  @Cron('45 18 * * *')
   async handleCron() {
     this.logger.debug('Running crawler...');
     console.log('====categoryList===', this.categoryList);
     for (let i = 0; i < this.categoryList.length; i++) {
       const item = this.categoryList[i];
       const detailList = await this.getDetailList(item.id);
-      const data = await this.getDetailData(detailList);
-      for (const menu of data) {
-        menu.category = item.value;
-        menu.categoryName = item.name;
-        const data = await this.menuRepository.find({
-          where: { id: menu.id },
-        });
-        if (data.length === 0 && menu.name) {
-          await this.menuRepository.save({ ...menu });
-        }
-        // console.log('🚀 ~ CrawlerService ~ handleCron ~ menu:', menu);
-      }
+      await this.getDetailData(detailList, item);
       this.logger.debug('Data saved to database');
+    }
+  }
+
+  // 进行网络请求并处理错误的函数
+  private async fetchWithRetry(url, retries = this.maxRetries) {
+    try {
+      const response = await axios.get(url, {
+        headers: this.headers,
+      });
+      return response;
+    } catch (error) {
+      if (retries > 0) {
+        console.log(
+          `请求失败，重试 ${this.maxRetries - retries + 1} 次: ${url}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待 1 秒后重试
+        return this.fetchWithRetry(url, retries - 1);
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -87,7 +103,7 @@ export class CrawlerService {
     const detailList = [];
     for (let i = 1; i <= 2; i++) {
       const url = `https://www.xiachufang.com/category/${id}/?page=${i}`;
-      const response = await axios.get(url, { headers: this.headers });
+      const response = await this.fetchWithRetry(url);
       const $ = cheerio.load(response.data);
       const links = $(
         'div.category-recipe-list ul.list li div.recipe div.info p.name a',
@@ -103,13 +119,18 @@ export class CrawlerService {
     return detailList;
   }
 
-  private async getDetailData(detailList) {
-    const data = [];
+  private async getDetailData(detailList, categoryItem) {
     // let i = 0;
     for (const detailUrl of detailList) {
       // i++;
       const url = this.root + detailUrl;
-      const response = await axios.get(url, { headers: this.headers });
+      // 检查链接后面是否有参数
+      const urlObj = new URL(url);
+      if (urlObj.search) {
+        console.log(`跳过有参数的链接: ${url}`);
+        continue; // 跳过有参数的链接
+      }
+      const response = await this.fetchWithRetry(url);
       const $ = cheerio.load(response.data);
 
       const row = {};
@@ -144,10 +165,22 @@ export class CrawlerService {
           console.error(`Failed to download image: ${imgUrl}`, error);
         }
       }
-      // 检查链接后面是否有参数
-      const urlObj = new URL(url);
-      if (row['name'] && row['steps'] && !urlObj.search) {
-        data.push(row);
+      if (row['name'] && row['steps']) {
+        row['category'] = categoryItem.value;
+        row['categoryName'] = categoryItem.name;
+        const data = await this.menuRepository.find({
+          where: { id: row['id'] },
+        });
+        if (data.length === 0) {
+          await this.menuRepository.save({ ...row });
+        } else {
+          const qb = await this.menuRepository.createQueryBuilder();
+          await qb
+            .update()
+            .set({ ...row })
+            .where({ id: row['id'] })
+            .execute();
+        }
         console.log(row['name'], url);
       }
 
@@ -157,7 +190,6 @@ export class CrawlerService {
       //   break;
       // }
     }
-    return data;
   }
 
   private async downloadImage(url: string, filename: string) {
