@@ -14,7 +14,7 @@ export class CrawlerService {
   private readonly root = 'http://www.xiachufang.com';
   private readonly headers = {
     'User-Agent':
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36', // 一点点伪装
   };
   private readonly imageDir = path.join(__dirname, '..', '..', 'imgs');
   private readonly categoryList = [
@@ -23,35 +23,35 @@ export class CrawlerService {
       value: 6,
       id: '40073',
     },
-    // {
-    //   name: '主食',
-    //   value: 1,
-    //   id: '20132',
-    // },
-    // {
-    //   name: '家常菜',
-    //   value: 2,
-    //   id: '40076',
-    // },
-    // {
-    //   name: '饮料',
-    //   value: 3,
-    //   id: '20136',
-    // },
-    // {
-    //   name: '甜点',
-    //   value: 4,
-    //   id: '20135',
-    // },
-    // {
-    //   name: '汤羹',
-    //   value: 5,
-    //   id: '20130',
-    // },
+    {
+      name: '主食',
+      value: 1,
+      id: '20132',
+    },
+    {
+      name: '家常菜',
+      value: 2,
+      id: '40076',
+    },
+    {
+      name: '饮料',
+      value: 3,
+      id: '20136',
+    },
+    {
+      name: '甜点',
+      value: 4,
+      id: '20135',
+    },
+    {
+      name: '汤羹',
+      value: 5,
+      id: '20130',
+    },
   ];
 
   private maxRetries = 3;
-
+  // 慢点爬，会被警告~
   private getRandomDelay() {
     return Math.floor(Math.random() * (10000 - 800 + 1)) + 800;
   }
@@ -67,20 +67,23 @@ export class CrawlerService {
     fs.ensureDirSync(this.imageDir);
   }
 
-  @Cron('45 18 * * *')
+  @Cron('0 3 1 * *') // 每月一号 凌晨3点跑一下
   async handleCron() {
     this.logger.debug('Running crawler...');
-    console.log('====categoryList===', this.categoryList);
     for (let i = 0; i < this.categoryList.length; i++) {
       const item = this.categoryList[i];
       const detailList = await this.getDetailList(item.id);
       await this.getDetailData(detailList, item);
-      this.logger.debug('Data saved to database');
     }
   }
 
-  // 进行网络请求并处理错误的函数
-  private async fetchWithRetry(url, retries = this.maxRetries) {
+  /**
+   * @description: 进行网络请求并处理错误的函数
+   * @return {*}
+   * @param {*} url
+   * @param {*} retries
+   */
+  private async fetchWithRetry(url: string, retries = this.maxRetries) {
     try {
       const response = await axios.get(url, {
         headers: this.headers,
@@ -91,7 +94,7 @@ export class CrawlerService {
         console.log(
           `请求失败，重试 ${this.maxRetries - retries + 1} 次: ${url}`,
         );
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待 1 秒后重试
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 秒后重试
         return this.fetchWithRetry(url, retries - 1);
       } else {
         throw error;
@@ -99,7 +102,12 @@ export class CrawlerService {
     }
   }
 
-  private async getDetailList(id) {
+  /**
+   * @description: 分类内容
+   * @return {*}
+   * @param {*} id
+   */
+  private async getDetailList(id: string) {
     const detailList = [];
     for (let i = 1; i <= 2; i++) {
       const url = `https://www.xiachufang.com/category/${id}/?page=${i}`;
@@ -119,7 +127,16 @@ export class CrawlerService {
     return detailList;
   }
 
-  private async getDetailData(detailList, categoryItem) {
+  /**
+   * @description: 详情处理
+   * @return {*}
+   * @param {*} detailList
+   * @param {*} categoryItem
+   */
+  private async getDetailData(
+    detailList: any[],
+    categoryItem: { name: any; value: any; id?: string },
+  ) {
     // let i = 0;
     for (const detailUrl of detailList) {
       // i++;
@@ -165,9 +182,11 @@ export class CrawlerService {
           console.error(`Failed to download image: ${imgUrl}`, error);
         }
       }
-      if (row['name'] && row['steps']) {
+      // 只存有标题和详细步骤的内容
+      if (row['name'] && row['steps'].length > 0) {
         row['category'] = categoryItem.value;
         row['categoryName'] = categoryItem.name;
+        // 入库
         const data = await this.menuRepository.find({
           where: { id: row['id'] },
         });
