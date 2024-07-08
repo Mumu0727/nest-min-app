@@ -43,6 +43,10 @@ export class PostService {
   }
 
   async getPostsByUserId(userId: number): Promise<Post[]> {
+    const user = await this.userService.findOne({ where: { id: userId }});
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
     const qb = await this.postRepository.createQueryBuilder('post');
     const postData = await qb.innerJoinAndSelect('post.menu', 'menu')
     .where('post.userId = :userId', { userId })

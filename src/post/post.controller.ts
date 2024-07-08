@@ -30,7 +30,8 @@ export class PostController {
   async getAllPosts() {
     return this.postService.getAllPosts();
   }
-
+  
+  @UseGuards(LoginGuard) // 应用JWT认证守卫
   @Get('get/:id')
   async getPostsByUserId(@Param('id') userId: number) {
     const posts = await this.postService.getPostsByUserId(userId);

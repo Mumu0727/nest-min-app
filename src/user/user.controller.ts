@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:47:13
- * @LastEditTime: 2024-07-02 13:57:44
+ * @LastEditTime: 2024-07-04 10:35:39
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -15,9 +15,11 @@ import {
   BadRequestException,
   HttpStatus,
   HttpException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import * as bcrypt from 'bcryptjs';
+import { LoginGuard } from 'src/login.guard';
 
 @Controller('user')
 // 用户控制器类，处理用户相关的HTTP请求
@@ -53,6 +55,7 @@ export class UserController {
   }
 
   // 关联两个用户，接受用户ID和关联用户ID，返回关联结果
+  @UseGuards(LoginGuard) // 应用JWT认证守卫
   @Put('relate/:id')
   async relateUsers(
     @Param('id') id: number,
