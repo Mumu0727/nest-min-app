@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-04 09:26:53
+ * @LastEditTime: 2024-07-08 12:46:46
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -24,7 +24,7 @@ import { Menu } from './menu/menu.entity';
       type: 'mysql',
       host: 'localhost',
       port: 3306,
-      username: 'root',
+      username: 'min-app',
       password: 'MuMu5217426',
       database: 'min-app',
       entities: ['dist/**/*.entity{.ts,.js}'],
