@@ -2,25 +2,31 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-11 11:21:34
+ * @LastEditTime: 2024-07-11 15:48:57
  * @LastEditors: muqingkun
  * @Reference:
  */
 import { Module } from '@nestjs/common';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { MenuModule } from './menu/menu.module';
 import { PostModule } from './post/post.module';
 import { CrawlerService } from './crawler/crawler.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ScheduleModule } from '@nestjs/schedule';
-import { JwtModule } from '@nestjs/jwt';
 import { Menu } from './menu/menu.entity';
 import { CommonModule } from './common/common.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'imgs'),
+      serveRoot: '/imgs',
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
