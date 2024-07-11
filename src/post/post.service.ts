@@ -18,29 +18,32 @@ export class PostService {
     private readonly postRepository: Repository<Post>,
   ) {}
 
-  async createPost(userId: number, createPostDto: CreatePostDto): Promise<Post> {
-    const user = await this.userService.findOne({ where: { id: userId }});
+  async createPost(userId: number, createPostDto: CreatePostDto): Promise<void> {
+    const user = await this.userService.findOne({ where: { id: userId } });
     if (!user) {
       throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
     }
     if (!user.relatedUserId) {
       throw new HttpException('需要先关联用户哦~', HttpStatus.BAD_REQUEST);
     }
-    const posts = await this.postRepository
-      .createQueryBuilder('post')
-      .where('(post.userId = :userId OR post.relatedUserId = :userId)', { userId })
-      .andWhere('post.releaseDate = :releaseDate', { releaseDate: createPostDto.releaseDate })
-      .andWhere('post.menuId = :menuId', {menuId: createPostDto.menuId })
-      .getMany();
-    if (!posts || posts.length > 0) {
-      throw new HttpException(`已经加入心愿单了，不要重复添加哈~`, HttpStatus.BAD_REQUEST);
+
+    for (const menu of createPostDto.menuList) {
+      const posts = await this.postRepository
+        .createQueryBuilder('post')
+        .where('(post.userId = :userId OR post.relatedUserId = :userId)', { userId })
+        .andWhere('post.releaseDate = :releaseDate', { releaseDate: createPostDto.releaseDate })
+        .andWhere('post.menuId = :menuId', { menuId: menu.id })
+        .getMany();
+      if (posts && posts.length > 0) {
+        throw new HttpException(` 【${menu.name}】 已经加入心愿单了，不要重复添加哦~`, HttpStatus.BAD_REQUEST);
+      }
+      await this.postRepository.save({ ...createPostDto, relatedUserId: user.relatedUserId, userId, menuId: menu.id });
     }
-    return this.postRepository.save({...createPostDto, relatedUserId: user.relatedUserId});
   }
 
-  async getAllPosts(): Promise<Post[]> {
-    return this.postRepository.find({ relations: ['user'] });
-  }
+  // async getAllPosts(): Promise<Post[]> {
+  //   return this.postRepository.find({ relations: ['user'] });
+  // }
 
   async getPostsByUserId(userId: number): Promise<Post[]> {
     const user = await this.userService.findOne({ where: { id: userId }});

@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 19:41:59
- * @LastEditTime: 2024-07-01 15:45:40
+ * @LastEditTime: 2024-07-11 11:30:54
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -13,12 +13,16 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Menu } from './menu.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginationService } from '../common/services/pagination.service';
+import { PaginationResults } from '../common/interfaces/pagination-results.interface';
 
 @Injectable()
 export class MenuService {
   constructor(
     @InjectRepository(Menu)
     private menuRepository: Repository<Menu>,
+    private readonly paginationService: PaginationService,
   ) {}
 
   @Inject(JwtService)
@@ -44,10 +48,19 @@ export class MenuService {
       where: { id },
     });
   }
-  async findByCategory(category: number) {
-    return await this.menuRepository.find({
-      where: { category },
-    });
+  async findByCategory(
+    paginationDto: PaginationDto,
+    category: number,
+  ): Promise<PaginationResults<Menu>> {
+    return this.paginationService.paginate<Menu>(
+      this.menuRepository,
+      paginationDto,
+      (qb) => {
+        if (category) {
+          qb.where('menu.category = :category', { category });
+        }
+      },
+    );
   }
 
   async remove(id: number) {

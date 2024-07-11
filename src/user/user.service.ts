@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 20:47:13
- * @LastEditTime: 2024-07-02 13:55:52
+ * @LastEditTime: 2024-07-11 11:43:47
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -48,6 +48,7 @@ export class UserService {
       const token = await this.jwtService.signAsync({
         user: {
           username: username,
+          userId: foundUser.id,
         },
       });
       return { token, ...foundUser };

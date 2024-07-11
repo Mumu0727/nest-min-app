@@ -1,6 +1,6 @@
 export class CreatePostDto {
   userId: number;
-  menuId: number;
+  menuList: Array<{ id: number; name: string }>;
   content: string;
   releaseDate: Date;
 }

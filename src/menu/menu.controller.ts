@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-01 19:53:49
+ * @LastEditTime: 2024-07-11 11:35:17
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -20,6 +20,8 @@ import { JwtService } from '@nestjs/jwt';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Pagination } from '../common/decorators/pagination.decorator';
 
 @Controller('menu')
 export class MenuController {
@@ -43,13 +45,17 @@ export class MenuController {
   @Post('delete')
   remove(@Body('id') id: string) {
     if (id) {
-      return this.menuService.remove(+id);
+      // return this.menuService.remove(+id);
+      throw new HttpException('小可爱~不要删除菜谱哦', HttpStatus.BAD_REQUEST);
     }
-    throw new HttpException('删除信息需传ID', HttpStatus.BAD_REQUEST);
   }
 
   @Get('query')
-  async findAll(@Query('id') id: string, @Query('category') category: number) {
+  async findAll(
+    @Pagination() paginationDto: PaginationDto,
+    @Query('id') id: string,
+    @Query('category') category: number,
+  ) {
     if (id) {
       const data = await this.menuService.findOne(+id);
       if (data.length > 0) {
@@ -59,7 +65,7 @@ export class MenuController {
       }
     }
     if (category) {
-      return this.menuService.findByCategory(+category);
+      return this.menuService.findByCategory(paginationDto, +category);
     }
     return this.menuService.findAll();
   }

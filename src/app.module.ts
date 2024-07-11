@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-08 12:46:46
+ * @LastEditTime: 2024-07-11 11:21:34
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -17,6 +17,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JwtModule } from '@nestjs/jwt';
 import { Menu } from './menu/menu.entity';
+import { CommonModule } from './common/common.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -24,7 +25,7 @@ import { Menu } from './menu/menu.entity';
       type: 'mysql',
       host: 'localhost',
       port: 3306,
-      username: 'min-app',
+      username: 'root',
       password: 'MuMu5217426',
       database: 'min-app',
       entities: ['dist/**/*.entity{.ts,.js}'],
@@ -43,6 +44,7 @@ import { Menu } from './menu/menu.entity';
     UserModule,
     MenuModule,
     PostModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [AppService, CrawlerService],
