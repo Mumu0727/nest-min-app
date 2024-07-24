@@ -2,7 +2,7 @@ import { PartialType } from '@nestjs/mapped-types';
 class _UpdateMenuDto {
   name: string;
   categoryName: string;
-  category: number;
+  category: string;
   imgUrl: string;
   practices: string;
   remark: string;

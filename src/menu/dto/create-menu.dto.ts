@@ -1,7 +1,7 @@
 export class CreateMenuDto {
   name: string;
   categoryName: string;
-  category: number;
+  category: string;
   imgUrl: string;
   practices: string;
   remark: string;

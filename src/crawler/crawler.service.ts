@@ -20,32 +20,32 @@ export class CrawlerService {
   private readonly categoryList = [
     {
       name: '其他',
-      value: 6,
+      value: '6',
       id: '40073',
     },
     {
       name: '主食',
-      value: 1,
+      value: '1',
       id: '20132',
     },
     {
       name: '家常菜',
-      value: 2,
+      value: '2',
       id: '40076',
     },
     {
       name: '饮料',
-      value: 3,
+      value: '3',
       id: '20136',
     },
     {
       name: '甜点',
-      value: 4,
+      value: '4',
       id: '20135',
     },
     {
       name: '汤羹',
-      value: 5,
+      value: '5',
       id: '20130',
     },
   ];
@@ -67,7 +67,7 @@ export class CrawlerService {
     fs.ensureDirSync(this.imageDir);
   }
 
-  @Cron('0 3 1 * *') // 每月一号 凌晨3点跑一下
+  @Cron('40 13 * * *') // 每月一号 凌晨3点跑一下
   async handleCron() {
     this.logger.debug('Running crawler...');
     for (let i = 0; i < this.categoryList.length; i++) {

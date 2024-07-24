@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 17:42:40
- * @LastEditTime: 2024-07-11 11:35:17
+ * @LastEditTime: 2024-07-24 13:51:55
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -54,7 +54,7 @@ export class MenuController {
   async findAll(
     @Pagination() paginationDto: PaginationDto,
     @Query('id') id: string,
-    @Query('category') category: number,
+    @Query('category') category: string,
   ) {
     if (id) {
       const data = await this.menuService.findOne(+id);
@@ -65,8 +65,8 @@ export class MenuController {
       }
     }
     if (category) {
-      return this.menuService.findByCategory(paginationDto, +category);
+      return this.menuService.findByCategory(paginationDto, category);
     }
-    return this.menuService.findAll();
+    return this.menuService.findAll(paginationDto);
   }
 }

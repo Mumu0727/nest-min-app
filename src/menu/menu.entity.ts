@@ -25,7 +25,7 @@ export class Menu {
   @Column({ default: null })
   categoryName: string;
   @Column({ default: null })
-  category: number;
+  category: string;
   @Column({ default: null })
   imgUrl: string;
   @Column({ default: null })

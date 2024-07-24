@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 19:41:59
- * @LastEditTime: 2024-07-11 11:30:54
+ * @LastEditTime: 2024-07-24 14:06:55
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -39,8 +39,11 @@ export class MenuService {
     return await qb.update().set(updateMenuDto).where({ id }).execute();
   }
 
-  async findAll() {
-    return await this.menuRepository.find();
+  async findAll(paginationDto: PaginationDto) {
+    return this.paginationService.paginate<Menu>(
+      this.menuRepository,
+      paginationDto,
+    );
   }
 
   async findOne(id: number) {
@@ -50,14 +53,14 @@ export class MenuService {
   }
   async findByCategory(
     paginationDto: PaginationDto,
-    category: number,
+    category: string,
   ): Promise<PaginationResults<Menu>> {
     return this.paginationService.paginate<Menu>(
       this.menuRepository,
       paginationDto,
       (qb) => {
         if (category) {
-          qb.where('menu.category = :category', { category });
+          qb.where({ category: category });
         }
       },
     );
