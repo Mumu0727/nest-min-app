@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import axios from 'axios';
 import cheerio from 'cheerio';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { FileService } from '../common/services/fileService.service';
 import { Menu } from './../menu/menu.entity';
+import { Post } from './../post/post.entity';
 
 @Injectable()
 export class CrawlerService {
@@ -63,18 +65,62 @@ export class CrawlerService {
   constructor(
     @InjectRepository(Menu)
     private menuRepository: Repository<Menu>,
+    @InjectRepository(Post)
+    private postRepository: Repository<Post>,
+    private fileService: FileService,
+    private readonly dataSource: DataSource,
   ) {
     fs.ensureDirSync(this.imageDir);
   }
 
-  @Cron('40 13 * * *') // 每月一号 凌晨3点跑一下
+  @Cron('00 3 1 * *') // 每月一号 凌晨3点跑一下
   async handleCron() {
     this.logger.debug('Running crawler...');
+    this.fileService.deleteOldFiles();
+    await this.clearMenuAndPostTables();
     for (let i = 0; i < this.categoryList.length; i++) {
       const item = this.categoryList[i];
       const detailList = await this.getDetailList(item.id);
       await this.getDetailData(detailList, item);
     }
+  }
+
+  /**
+   * @description: 清理 menu 和 post 表
+   * @return {*}
+   */
+  async clearMenuAndPostTables() {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - 20);
+
+    await this.dataSource.transaction(async (manager) => {
+      // 找出所有超过 20 天的 menu
+      const oldMenus = await manager
+        .createQueryBuilder(Menu, 'menu')
+        .where('menu.createDate < :date', { date: dateThreshold.toISOString() })
+        .getMany();
+
+      // 提取 menu 的 ids
+      const oldMenuIds = oldMenus.map((menu) => menu.id);
+
+      if (oldMenuIds.length > 0) {
+        // 删除 post 表中关联的 menuId
+        await manager
+          .createQueryBuilder()
+          .delete()
+          .from(Post)
+          .where('post.menuId IN (:...ids)', { ids: oldMenuIds })
+          .execute();
+
+        // 删除 menu 表中过期的数据
+        await manager
+          .createQueryBuilder()
+          .delete()
+          .from(Menu)
+          .where('menu.id IN (:...ids)', { ids: oldMenuIds })
+          .execute();
+      }
+    });
   }
 
   /**
@@ -168,7 +214,20 @@ export class CrawlerService {
       row['steps'] = [];
       $('div.steps ol li').each((j, el) => {
         const text = $(el).find('p.text').text().trim();
-        row['steps'].push({ text, menuId: row['id'], step: j });
+        const imgUrl = $(el).find('img').attr('src');
+        if (imgUrl) {
+          const imgFilename = path.join(
+            this.imageDir,
+            `${row['id']}_step${j + 1}.jpg`,
+          );
+          this.downloadImage(imgUrl, imgFilename);
+        }
+        row['steps'].push({
+          text,
+          menuId: row['id'],
+          step: j + 1,
+          stepImg: `${row['id']}_step${j + 1}.jpg`,
+        });
       });
 
       // 获取图片链接并下载

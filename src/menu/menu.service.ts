@@ -2,7 +2,7 @@
  * @Description:
  * @Author: muqingkun
  * @Date: 2024-06-28 19:41:59
- * @LastEditTime: 2024-07-24 14:06:55
+ * @LastEditTime: 2024-10-09 10:33:35
  * @LastEditors: muqingkun
  * @Reference:
  */
@@ -43,6 +43,9 @@ export class MenuService {
     return this.paginationService.paginate<Menu>(
       this.menuRepository,
       paginationDto,
+      (qb) => {
+        qb.orderBy('menu.createDate', 'DESC'); // 按最新创建时间排序
+      },
     );
   }
 
